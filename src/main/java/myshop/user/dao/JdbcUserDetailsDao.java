@@ -76,6 +76,7 @@ public class JdbcUserDetailsDao implements UserDetailsDao {
         if (userDetails.getUserId() == null) {
             throw new IllegalArgumentException("Нельзя обновить данные пользователя без user_id");
         }
+
         String sql = "UPDATE user_details SET first_name = ?, last_name = ?, address = ?, phone = ? " +
                 "WHERE user_id = ?";
         try (Connection connection = ConnectionManager.getConnection();
