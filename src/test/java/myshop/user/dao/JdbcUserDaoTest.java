@@ -173,7 +173,7 @@ class JdbcUserDaoTest {
 
             assertThrows(DaoException.class,
                     () -> userDao.findById(createdUser.getId()),
-                    "При SQLException должен быть брошен DaoException"
+                    "When SQLException is thrown, a DaoException must be thrown."
             );
         }
     }

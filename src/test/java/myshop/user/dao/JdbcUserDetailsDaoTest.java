@@ -19,14 +19,13 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class JdbcUserDetailsDaoTest {
     private UserDetailsDao userDetailsDao;
-    private UserDao userDao;
     private Long userId1;
     private Long userId2;
 
     @BeforeEach
     void setUp() throws SQLException {
         userDetailsDao = new JdbcUserDetailsDao();
-        userDao = new JdbcUserDao();
+        UserDao userDao = new JdbcUserDao();
         try (Connection connection = ConnectionManager.getConnection();
              Statement st = connection.createStatement()) {
             st.executeUpdate("DELETE FROM user_details");
