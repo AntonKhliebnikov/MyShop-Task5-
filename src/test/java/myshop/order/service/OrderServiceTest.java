@@ -24,16 +24,22 @@ class OrderServiceTest {
         OrderDao orderDao = mock(OrderDao.class);
         OrderService orderService = new OrderService(shoppingCartDao, productDao, orderDao);
         Long userId = 1L;
+
         ShoppingCart userShoppingCart1 = new ShoppingCart(userId, 1L, 1);
         ShoppingCart userShoppingCart2 = new ShoppingCart(userId, 2L, 2);
         List<ShoppingCart> userProducts = List.of(userShoppingCart1, userShoppingCart2);
+
         when(shoppingCartDao.findByUserId(userId)).thenReturn(userProducts);
         when(productDao.findById(1L))
                 .thenReturn(new Product(1L, "product1", new BigDecimal("100.00")));
         when(productDao.findById(2L))
                 .thenReturn(new Product(2L, "product2", new BigDecimal("50.00")));
 
+        when(orderDao.saveOrder(any(Order.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
         Order order = orderService.placeOrder(userId);
+        assertNotNull(order);
         assertEquals(new BigDecimal("200.00"), order.getTotalAmount(),
                 "The total order amount must be 200.00"
         );

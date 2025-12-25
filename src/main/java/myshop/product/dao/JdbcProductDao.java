@@ -1,5 +1,6 @@
 package myshop.product.dao;
 
+import lombok.extern.log4j.Log4j2;
 import myshop.common.db.ConnectionManager;
 import myshop.common.exception.DaoException;
 import myshop.product.model.Product;
@@ -11,14 +12,19 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+@Log4j2
 public class JdbcProductDao implements ProductDao {
+
     @Override
     public Product createProduct(Product product) {
         if (product.getId() != null) {
-            throw new IllegalArgumentException("При создании продукта id должен быть null");
+            throw new IllegalArgumentException("When creating a product, the id must be null");
         }
 
         String sql = "INSERT INTO products (product_name, price) VALUES (?, ?) RETURNING id";
+
+        log.debug("createProduct() called with product = {}", product);
+
         try (Connection connection = ConnectionManager.getConnection();
              PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setString(1, product.getProductName());
@@ -27,19 +33,24 @@ public class JdbcProductDao implements ProductDao {
                 if (rs.next()) {
                     Long generatedId = rs.getLong("id");
                     product.setId(generatedId);
+                    log.info("Product successfully created, id = {}", generatedId);
                     return product;
                 } else {
-                    throw new DaoException("Не удалось получить сгенерированный id для продукта");
+                    log.error("ResultSet is empty when creating product: {}", product);
+                    throw new DaoException("Failed to get generated id for product");
                 }
             }
         } catch (SQLException e) {
-            throw new DaoException("Ошибка при создании продукта: " + product, e);
+            log.error("SQL error creating product: {}", product, e);
+            throw new DaoException("Error creating product: " + product, e);
         }
     }
 
     @Override
     public List<Product> findAllProducts() {
         String sql = "SELECT id, product_name, price FROM products";
+        log.debug("findAllProducts() called");
+
         List<Product> products = new ArrayList<>();
         try (Connection connection = ConnectionManager.getConnection();
              PreparedStatement ps = connection.prepareStatement(sql);
@@ -47,8 +58,11 @@ public class JdbcProductDao implements ProductDao {
             while (rs.next()) {
                 products.add(mapRowToProduct(rs));
             }
+
+            log.info("{} products found", products.size());
         } catch (SQLException e) {
-            throw new DaoException("Ошибка при получении всех продуктов", e);
+            log.error("SQL error while getting all products", e);
+            throw new DaoException("Error receiving all products", e);
         }
         return products;
     }
@@ -56,28 +70,36 @@ public class JdbcProductDao implements ProductDao {
     @Override
     public Product findById(Long id) {
         String sql = "SELECT id, product_name, price FROM products WHERE id = ?";
+        log.debug("findById() called with id = {}", id);
+
         try (Connection connection = ConnectionManager.getConnection();
              PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setLong(1, id);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    return mapRowToProduct(rs);
+                    Product product = mapRowToProduct(rs);
+                    log.info("Product with id = {} found: {}", id, product);
+                    return product;
                 } else {
+                    log.info("Product with id = {} not found", id);
                     return null;
                 }
             }
         } catch (SQLException e) {
-            throw new DaoException("Ошибка при получении продукта по id = " + id, e);
+            log.error("SQL error while searching for product by id = {}", id, e);
+            throw new DaoException("Error getting product by ID = " + id, e);
         }
     }
 
     @Override
     public void updateProduct(Product product) {
         if (product.getId() == null) {
-            throw new IllegalArgumentException("Нельзя обновить продукт без id");
+            throw new IllegalArgumentException("You cannot update a product without an ID");
         }
 
         String sql = "UPDATE products SET product_name = ?, price = ? WHERE id = ?";
+        log.debug("updateProduct() called with product = {}", product);
+
         try (Connection connection = ConnectionManager.getConnection();
              PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setString(1, product.getProductName());
@@ -85,27 +107,37 @@ public class JdbcProductDao implements ProductDao {
             ps.setLong(3, product.getId());
             int updatedRow = ps.executeUpdate();
             if (updatedRow == 0) {
-                throw new DaoException("Продукт с id = " + product.getId() +
-                        " не найден, обновление не выполнено");
+                log.warn("Product with id = {} not found, update failed", product.getId());
+                throw new DaoException("Product with id = " + product.getId() +
+                        " not found, update failed");
             }
+
+            log.info("Product with id = {} successfully updated", product.getId());
         } catch (SQLException e) {
-            throw new DaoException("Ошибка при обновлении продукта: " + product, e);
+            log.error("SQL error updating product: {}", product, e);
+            throw new DaoException("Error updating product: " + product, e);
         }
     }
 
     @Override
     public void deleteById(Long id) {
         String sql = "DELETE FROM products WHERE id = ?";
+        log.debug("deleteById() called with id = {}", id);
+
         try (Connection connection = ConnectionManager.getConnection();
              PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setLong(1, id);
             int deletedRow = ps.executeUpdate();
             if (deletedRow == 0) {
-                throw new DaoException("Продукт с id = " + id +
-                        " не найден, удаление не выполнено");
+                log.warn("Product with id = {} not found, deletion failed", id);
+                throw new DaoException("Product with id = " + id +
+                        " not found, deletion failed");
             }
+
+            log.info("Product with id = {} successfully deleted", id );
         } catch (SQLException e) {
-            throw new DaoException("Ошибка при удалении продукта по id = " + id, e);
+            log.error("SQL error when deleting product with id = {}", id, e);
+            throw new DaoException("Error deleting product by ID = " + id, e);
         }
     }
 

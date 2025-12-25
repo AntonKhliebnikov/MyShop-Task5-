@@ -16,10 +16,11 @@ public class MyShopApp {
         ShoppingCartDao cartDao = new JdbcShoppingCartDao();
         ProductDao productDao = new JdbcProductDao();
         OrderDao orderDao = new JdbcOrderDao();
-//        OrderService orderService = new OrderService(cartDao, productDao, orderDao);
-//        System.out.println(orderService.placeOrder(9L));
-        User user = new User(null, "Anton", "toha@gmail.com");
-        UserDao userDao = new JdbcUserDao();
-        System.out.println(userDao.createUser(user));
+        OrderService orderService = new OrderService(cartDao, productDao, orderDao);
+        orderService.placeOrder(3L);
+
+//        User user = new User(null, "Anton2", "toha2@gmail.com");
+//        UserDao userDao = new JdbcUserDao();
+//        System.out.println(userDao.createUser(user));
     }
 }
