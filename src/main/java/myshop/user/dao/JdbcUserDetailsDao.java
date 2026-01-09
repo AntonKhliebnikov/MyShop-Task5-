@@ -134,6 +134,8 @@ public class JdbcUserDetailsDao implements UserDetailsDao {
                 throw new DaoException("UserDetails with userId = " + userId
                         + " not found, deletion failed");
             }
+
+            log.info("UserDetails with userId = {} successfully deleted", userId);
         } catch (SQLException e) {
             log.error("SQL error deleting userDetails by userId = {}", userId, e);
             throw new DaoException("Error deleting userDetails by userId = " + userId, e);

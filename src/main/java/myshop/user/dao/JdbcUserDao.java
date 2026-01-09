@@ -97,7 +97,7 @@ public class JdbcUserDao implements UserDao {
     @Override
     public void updateUser(User user) {
         if (user.getId() == null) {
-            throw new IllegalArgumentException("You can't update a user without an ID");
+            throw new IllegalArgumentException("You can't update user without ID");
         }
 
         String sql = "UPDATE users SET username = ?, email = ? WHERE id = ?";
